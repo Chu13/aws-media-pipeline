@@ -1,0 +1,13 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ember">
+  <!-- Favicon-scale mark: per brand guidelines, icon-alone usage below 24px
+       drops the two spark flecks and ships just the glowing core so it
+       reads clearly at 16px in a browser tab. -->
+  <defs>
+    <radialGradient id="emberCoreFavicon" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#FFD37A"/>
+      <stop offset="55%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#C7481B"/>
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="26" fill="url(#emberCoreFavicon)"/>
+</svg>

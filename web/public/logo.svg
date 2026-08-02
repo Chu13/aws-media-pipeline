@@ -1,0 +1,53 @@
+<svg width="520" height="160" viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="ember-logo-title ember-logo-desc">
+  <title id="ember-logo-title">Ember</title>
+  <desc id="ember-logo-desc">A glowing ember with two sparks lifting off it, beside the wordmark "ember" — logo for the serverless AWS image-optimization pipeline.</desc>
+
+  <defs>
+    <radialGradient id="emberCore" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#FFD37A"/>
+      <stop offset="55%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#C7481B"/>
+    </radialGradient>
+
+    <linearGradient id="sparkGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="100%" stop-color="#FFD37A"/>
+    </linearGradient>
+
+    <filter id="glowBlur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+  </defs>
+
+  <!-- Canvas: brand background (token ember-bg). The mark is dark-first —
+       drop the rect and use icon/wordmark on transparent if compositing
+       onto an existing dark surface elsewhere in the product. -->
+  <rect x="0" y="0" width="520" height="160" rx="28" ry="28" fill="#120E0D"/>
+
+  <!-- Icon: glowing ember + two rising sparks -->
+  <g>
+    <!-- soft bloom behind the core -->
+    <circle cx="92" cy="88" r="46" fill="url(#emberCore)" opacity="0.35" filter="url(#glowBlur)"/>
+
+    <!-- the ember itself -->
+    <circle cx="92" cy="88" r="34" fill="url(#emberCore)"/>
+
+    <!-- sparks lifting off, up and to the right -->
+    <rect x="122" y="44" width="16" height="16" fill="url(#sparkGrad)" transform="rotate(45 130 52)"/>
+    <rect x="144" y="26" width="11" height="11" fill="url(#sparkGrad)" opacity="0.85" transform="rotate(45 149.5 31.5)"/>
+    <rect x="160" y="14" width="7" height="7" fill="url(#sparkGrad)" opacity="0.65" transform="rotate(45 163.5 17.5)"/>
+  </g>
+
+  <!-- Wordmark. Shipped as live text (Space Grotesk, with system fallbacks)
+       for editability; convert to outlined paths before production use so
+       rendering is identical everywhere. -->
+  <text
+    x="196"
+    y="104"
+    font-family="'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif"
+    font-size="64"
+    font-weight="600"
+    letter-spacing="0.5"
+    fill="#F5EDE7"
+  >ember</text>
+</svg>

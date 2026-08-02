@@ -14,34 +14,45 @@ const refs = mountApp(root);
 
 async function handleFile(file: File): Promise<void> {
   clearResults(refs);
+  refs.statusEl.dataset.state = "idle";
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    setStatus(refs.statusEl, "Unsupported file type. Please use JPEG, PNG, or WebP.");
+    refs.statusEl.dataset.state = "error";
+    setStatus(refs.statusEl, "That file type isn't supported. Please use JPEG, PNG, or WebP.");
     return;
   }
   if (file.size > MAX_SIZE_BYTES) {
-    setStatus(refs.statusEl, "That file is too large. The limit is 10 MB.");
+    refs.statusEl.dataset.state = "error";
+    setStatus(
+      refs.statusEl,
+      "That file's over 10MB. Trim it down or split it up and try again — same pipeline, same wait either way.",
+    );
     return;
   }
 
   try {
+    refs.statusEl.dataset.state = "processing";
     setStatus(refs.statusEl, "Requesting a secure upload slot...");
     const presign = await requestPresign(file);
 
-    setStatus(refs.statusEl, "Uploading directly to S3...");
+    setStatus(refs.statusEl, "Uploading straight to S3 — no server of ours in between.");
     await uploadToS3(file, presign.uploadUrl);
 
-    setStatus(refs.statusEl, "Processing — generating WebP/AVIF variants...");
+    setStatus(refs.statusEl, "Sharp is generating six variants right now. Usually 12–24 seconds.");
     const manifest = await pollManifest(presign.manifestUrl);
 
     if (manifest.status === "error") {
+      refs.statusEl.dataset.state = "error";
       setStatus(refs.statusEl, `Processing failed: ${manifest.error ?? "unknown error"}.`);
       return;
     }
 
-    setStatus(refs.statusEl, "Done — your optimized variants are below.");
+    refs.statusEl.dataset.state = "success";
+    const bestSavingsPct = Math.max(...manifest.variants.map((variant) => variant.savingsPct));
+    setStatus(refs.statusEl, `Done — six variants, up to ${bestSavingsPct}% smaller. See for yourself below.`);
     renderResults(refs, manifest.original?.bytes ?? file.size, manifest.variants);
   } catch (error) {
+    refs.statusEl.dataset.state = "error";
     if (error instanceof PollTimeoutError) {
       setStatus(refs.statusEl, "This is taking longer than expected. Please try again in a moment.");
     } else {
