@@ -30,7 +30,7 @@ interface ExampleVariant {
 }
 
 const EXAMPLE_ORIGINAL = {
-  bytes: 1_919_247,
+  bytes: 641_258,
   width: 3000,
   height: 2000,
   label: "JPEG",
@@ -38,12 +38,12 @@ const EXAMPLE_ORIGINAL = {
 };
 
 const EXAMPLE_VARIANTS: ExampleVariant[] = [
-  { format: "webp", width: 480, height: 320, bytes: 15_002, savingsPct: 99.2, file: "480.webp" },
-  { format: "avif", width: 480, height: 320, bytes: 3_135, savingsPct: 99.8, file: "480.avif" },
-  { format: "webp", width: 1024, height: 683, bytes: 161_448, savingsPct: 91.6, file: "1024.webp" },
-  { format: "avif", width: 1024, height: 683, bytes: 63_068, savingsPct: 96.7, file: null },
-  { format: "webp", width: 1920, height: 1280, bytes: 512_556, savingsPct: 73.3, file: "1920.webp" },
-  { format: "avif", width: 1920, height: 1280, bytes: 246_215, savingsPct: 87.2, file: null },
+  { format: "webp", width: 480, height: 320, bytes: 2_326, savingsPct: 99.6, file: "480.webp" },
+  { format: "avif", width: 480, height: 320, bytes: 1_425, savingsPct: 99.8, file: "480.avif" },
+  { format: "webp", width: 1024, height: 683, bytes: 6_792, savingsPct: 98.9, file: "1024.webp" },
+  { format: "avif", width: 1024, height: 683, bytes: 3_400, savingsPct: 99.5, file: "1024.avif" },
+  { format: "webp", width: 1920, height: 1280, bytes: 69_256, savingsPct: 89.2, file: "1920.webp" },
+  { format: "avif", width: 1920, height: 1280, bytes: 12_403, savingsPct: 98.1, file: "1920.avif" },
 ];
 
 const EXAMPLE_BEST = EXAMPLE_VARIANTS.reduce((best, v) => (v.savingsPct > best.savingsPct ? v : best));
@@ -77,10 +77,9 @@ function renderExampleGallery(): string {
     </p>
 
     <div class="gallery__note">
-      The original here is ${EXAMPLE_ORIGINAL.width}×${EXAMPLE_ORIGINAL.height} of synthetic
-      noise &mdash; deliberately the hardest case for a compressor, since there's no flat color or
-      repeating pattern to exploit. It's what we use to stress-test the pipeline before a real photo
-      ever touches it.
+      The original here is a ${EXAMPLE_ORIGINAL.width}×${EXAMPLE_ORIGINAL.height} generated scene, not
+      a stock photo &mdash; we don't ship third-party images we don't have the rights to. It's built
+      with real gradients and grain, not a flat fill, so the pipeline still has genuine work to do.
     </div>
 
     <div class="showcase">
@@ -89,7 +88,7 @@ function renderExampleGallery(): string {
         <div class="showcase__frame">
           <img
             src="/examples/${EXAMPLE_ORIGINAL.file}"
-            alt="Full-resolution original: solid gray synthetic noise, ${EXAMPLE_ORIGINAL.width}×${EXAMPLE_ORIGINAL.height}."
+            alt="Full-resolution original: a generated sunset-over-mountains scene, ${EXAMPLE_ORIGINAL.width}×${EXAMPLE_ORIGINAL.height}."
             width="${EXAMPLE_ORIGINAL.width}"
             height="${EXAMPLE_ORIGINAL.height}"
             loading="lazy"

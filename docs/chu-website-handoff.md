@@ -34,7 +34,7 @@ you want the full rationale, palette, and voice behind it).
     "Event-driven Lambda pipeline — an S3 ObjectCreated trigger runs sharp to generate WebP and AVIF variants at three sizes, never upscaling past the source",
     "Complete infrastructure as code in AWS CDK — every bucket, Lambda, IAM policy, and the CloudFront distribution itself, torn down cleanly with a single cdk destroy",
     "A real ~60-minute autodestruction engineered around a genuine platform limit — S3 Lifecycle can only expire objects at day granularity, so an EventBridge-scheduled sweeper does the actual deletion instead",
-    "A ground-up brand built for this one tool — name, palette, type, logo, and voice — with an on-page example gallery and results table that only ever show real pipeline output, never a mockup",
+    "A ground-up brand built for this one tool — name, palette, type, logo, and voice — with an on-page example gallery showing all six real generated variants, downloadable, from an actual run of the live pipeline",
   ],
   coverImage: "/projects/aws-media-pipeline-cover.png",
   coverImageAlt:
