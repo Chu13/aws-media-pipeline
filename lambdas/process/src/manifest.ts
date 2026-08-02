@@ -2,8 +2,13 @@ import type { GeneratedVariant, VariantFormat } from "./variants";
 
 const EXPIRATION_MS = 60 * 60 * 1000; // 1 hour — matches the S3 sweeper's window.
 
+// No `filename` here: capturing it would mean signing S3 object metadata
+// into the presigned PUT (reintroducing the same browser Content-Type
+// signature-mismatch risk the presign handler deliberately avoids). The
+// frontend already knows the original file's name from the `File` object
+// it never let out of its hands — the manifest only needs to report what
+// the server itself authoritatively observed after downloading the bytes.
 export interface ManifestOriginal {
-  filename: string;
   contentType: string;
   bytes: number;
   width: number;

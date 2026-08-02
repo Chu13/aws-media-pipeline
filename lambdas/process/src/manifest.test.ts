@@ -30,7 +30,7 @@ function fakeVariant(overrides: Partial<GeneratedVariant>): GeneratedVariant {
 
 describe("buildReadyManifest", () => {
   const createdAt = new Date("2026-08-02T10:00:00.000Z");
-  const original = { filename: "photo.jpg", contentType: "image/jpeg", bytes: 5_000_000, width: 4000, height: 3000 };
+  const original = { contentType: "image/jpeg", bytes: 5_000_000, width: 4000, height: 3000 };
 
   it("sets expiresAt exactly 60 minutes after createdAt", () => {
     const manifest = buildReadyManifest({ jobId: "job-1", createdAt, original, variants: [] });
