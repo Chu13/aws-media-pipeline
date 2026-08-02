@@ -21,7 +21,7 @@ export interface ManifestVariant {
 
 export interface Manifest {
   jobId: string;
-  status: "ready" | "error";
+  status: "processing" | "ready" | "error";
   createdAt: string;
   expiresAt: string;
   original: ManifestOriginal | null;
@@ -57,6 +57,24 @@ export function buildReadyManifest(params: {
       url: `/${variant.key}`,
       savingsPct: savingsPct(params.original.bytes, variant.bytes),
     })),
+    error: null,
+  };
+}
+
+/**
+ * Written the instant the S3 ObjectCreated event fires, before sharp does
+ * any work. Converts most of the frontend's polling window from "404,
+ * possibly cached at the CloudFront edge for a few seconds" into a real
+ * 200 with a status field the UI can render ("procesando...").
+ */
+export function buildProcessingManifest(params: { jobId: string; createdAt: Date }): Manifest {
+  return {
+    jobId: params.jobId,
+    status: "processing",
+    createdAt: params.createdAt.toISOString(),
+    expiresAt: new Date(params.createdAt.getTime() + EXPIRATION_MS).toISOString(),
+    original: null,
+    variants: [],
     error: null,
   };
 }

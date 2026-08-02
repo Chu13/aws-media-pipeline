@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildErrorManifest, buildReadyManifest, savingsPct } from "./manifest";
+import { buildErrorManifest, buildProcessingManifest, buildReadyManifest, savingsPct } from "./manifest";
 import type { GeneratedVariant } from "./variants";
 
 describe("savingsPct", () => {
@@ -54,6 +54,19 @@ describe("buildReadyManifest", () => {
       url: "/r/job-1/480.webp",
       savingsPct: savingsPct(original.bytes, 12_000),
     });
+  });
+});
+
+describe("buildProcessingManifest", () => {
+  it("sets status processing with no original, variants, or error yet", () => {
+    const createdAt = new Date("2026-08-02T10:00:00.000Z");
+    const manifest = buildProcessingManifest({ jobId: "job-1", createdAt });
+
+    expect(manifest.status).toBe("processing");
+    expect(manifest.original).toBeNull();
+    expect(manifest.variants).toEqual([]);
+    expect(manifest.error).toBeNull();
+    expect(manifest.expiresAt).toBe("2026-08-02T11:00:00.000Z");
   });
 });
 
