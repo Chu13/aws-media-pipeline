@@ -71,6 +71,12 @@ describe("process handler", () => {
       .commandCalls(PutObjectCommand)
       .filter((call) => call.args[0].input.Key !== "r/job-2/manifest.json");
     expect(variantPuts).toHaveLength(6);
+
+    // Forces a real download regardless of how the link is reached — the
+    // portfolio site's iframe sandbox has no allow-downloads.
+    for (const put of variantPuts) {
+      expect(put.args[0].input.ContentDisposition).toMatch(/^attachment; filename="image-\d+\.(webp|avif)"$/);
+    }
   });
 
   it("writes an error manifest instead of throwing when the bytes are not a supported image", async () => {

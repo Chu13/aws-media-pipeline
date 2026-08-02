@@ -68,6 +68,14 @@ async function processUpload(bucket: string, key: string): Promise<void> {
             Key: variant.key,
             Body: variant.body,
             ContentType: variant.contentType,
+            // Forces a real download rather than an inline navigation.
+            // The portfolio site's iframe sandbox doesn't grant
+            // allow-downloads, so a plain <a download> inside it would be
+            // silently blocked; Content-Disposition set on the object
+            // itself works regardless of how it's linked to, and combined
+            // with target="_blank" on the frontend's anchor (see
+            // web/src/ui.ts) it works both embedded and standalone.
+            ContentDisposition: `attachment; filename="image-${variant.targetWidth}.${variant.format}"`,
           }),
         ),
       ),
