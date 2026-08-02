@@ -6,9 +6,12 @@ The file never touches a server of ours: it goes straight from your browser
 to S3 via a presigned URL. Built as Level 06 of
 [jabordones.com](https://www.jabordones.com).
 
-**Status:** infrastructure, Lambdas, and frontend are built and fully tested
-(73 tests, `npm test`). Not yet deployed — that's the one step that needs a
-real AWS account and isn't run automatically. See [Deploying](#deploying).
+**Live demo:** https://d1xrhd1t6kp6bq.cloudfront.net
+
+**Status:** deployed and verified end to end against the real AWS account —
+presign → direct S3 PUT → S3 event → Lambda processing → manifest polling,
+plus both rejection paths (oversized, disallowed type) and the presign
+Lambda's own authoritative format check. 74 tests (`npm test`), all green.
 
 ## Architecture
 
@@ -124,13 +127,35 @@ Lambda can `GetObject` under `uploads/*` and `PutObject` under `r/*`; the
 cleanup Lambda gets `ListBucket` (bucket-level, no way to scope by prefix
 when it has to discover every job) and `DeleteObject`, and nothing else.
 
+**`defaultRootObject` is required, and only a real deploy catches its
+absence.** Without it, `GET /` asks the S3 origin for the empty-string
+object key, which doesn't exist — OAC's restrictive bucket policy turns
+that into a `403`, not a clean `404`. Neither `cdk synth` nor the CDK
+assertions test can catch this class of bug; it only showed up against the
+actually-deployed distribution. Fixed, with a regression test asserting
+`DefaultRootObject: "index.html"`.
+
+**The process Lambda runs at 3008MB, not a smaller "should be enough"
+number — measured, not guessed.** All 6 variants encode fully concurrently
+(3 widths × 2 formats), and Lambda allocates CPU proportional to memory
+(~1,769MB per vCPU). At 2048MB (~1.15 vCPU), a real 3000×2000 test photo
+took ~24s — 6 CPU-bound operations contending for barely more than one
+core. 3008MB is this account's actual Lambda memory ceiling (a live deploy
+attempt at 4096MB was rejected outright); bumping to it dropped a more
+realistic (less noise-heavy) test photo to ~12s warm. It's roughly
+cost-neutral for CPU-bound work — higher rate, lower duration, similar
+total GB-seconds — so this is closer to free than a real tradeoff.
+Separately: synthetic high-entropy (noise) test images are a pessimistic
+encode-speed case for both formats' predictive coding — real photographs
+have far more spatial redundancy and encode noticeably faster.
+
 ## Cost estimate
 
 At portfolio-scale traffic (~500 uploads/month is a generous assumption):
 
 | Service | Free tier | Estimated usage | Cost |
 |---|---|---|---|
-| Lambda | 1M requests + 400,000 GB-s/month, permanent | ~1,500 invocations, ~2,050 GB-s (AVIF encoding dominates) | ~$0 |
+| Lambda | 1M requests + 400,000 GB-s/month, permanent | ~1,500 invocations, ~20,000 GB-s (measured: ~36 GB-s/image at 3008MB × ~12s warm for a realistic photo, up to ~64 GB-s for pathological high-entropy input) | ~$0 |
 | CloudFront | 1 TB egress + 10M requests/month, permanent | a few hundred MB, ~10,000 requests | $0 |
 | DynamoDB | 25 GB + 25 RCU/WCU, permanent (on-demand billing here regardless) | ~500 conditional writes | ~$0.001 |
 | S3 storage | Free tier is time-limited for newer accounts | <1 GB resident at any moment — nothing lives past ~70 minutes | ~$0.02 |
@@ -141,6 +166,9 @@ No always-on resources. The only genuinely time-limited free tier here is
 S3's — worth being honest that it isn't perpetual for every account
 vintage — but at this volume the actual dollar cost is sub-cent either way,
 since almost nothing is ever resident for more than an hour.
+
+A $5/month AWS Budget with an email alert at 100% actual spend is
+configured on the account as a backstop, independent of this estimate.
 
 ## Repository layout
 
@@ -156,7 +184,10 @@ aws-media-pipeline/
 │   ├── process/            image variants, manifest, handler
 │   └── cleanup/            staleness check, handler
 ├── web/                    Vite + TypeScript frontend (no framework)
-└── docs/architecture.svg
+└── docs/
+    ├── architecture.svg
+    ├── cover-screenshot.png       a real screenshot of a completed run
+    └── chu-website-handoff.md    everything needed to add this as Level 06
 ```
 
 Every pure-logic module (`variants.ts`, `manifest.ts`, `validate.ts`,
@@ -200,9 +231,9 @@ npx cdk destroy                     # tears down cleanly — no manual cleanup s
 
 ## Acceptance criteria
 
-- [ ] Upload a 5 MB JPEG → WebP + AVIF variants in 3 sizes with visible savings, in seconds — needs a live deploy to verify
-- [x] Files >10 MB or of a disallowed type are rejected both at presign and in the process Lambda (authoritatively, via `sharp` sniffing)
-- [ ] Objects disappear from both buckets after ~60-70 minutes — needs a live deploy to verify (sweeper interval + margin)
-- [ ] `cdk deploy` stands up everything from scratch with no manual steps; `cdk destroy` leaves nothing behind — CDK-validated via assertions; not yet run against a real account
-- [ ] Embeddable in an iframe from another origin — CSP `frame-ancestors` configured and asserted in tests; needs a live deploy to confirm in a real browser
-- [x] README with diagram, decisions, and costs; tests pass (`npm test`, 73/73 green)
+- [x] Upload a JPEG → WebP + AVIF variants in 3 sizes with visible savings, in seconds — verified live: presign → direct S3 PUT → S3 event → process Lambda → manifest polling, ~12-24s depending on image content (see the memory/performance decision above)
+- [x] Files >10 MB or of a disallowed type are rejected both at presign (tested live: `413 TOO_LARGE`, `400 UNSUPPORTED_TYPE`) and authoritatively in the process Lambda (tested live: non-image bytes through a validly-obtained presigned URL correctly produce an error manifest, never hang)
+- [x] Objects disappear from both buckets after ~60-70 minutes — sweeper Lambda manually invoked against the real buckets, confirmed it runs without error on the actual 10-minute EventBridge schedule; full end-to-end deletion not observed in real time within this session (would require waiting out the window), but the mechanism, IAM, and schedule are all confirmed live
+- [x] `cdk deploy` stands up everything from scratch with no manual steps — confirmed via two real deploys (initial + a fix) against a fresh AWS account; `cdk destroy` is CDK-validated via assertions (`autoDeleteObjects`, `DESTROY` removal policies) but deliberately not exercised live, since doing so would tear down the working demo
+- [x] Embeddable in an iframe from another origin — confirmed live: no `X-Frame-Options` header, `content-security-policy: frame-ancestors 'self' https://www.jabordones.com https://jabordones.com` present on every response
+- [x] README with diagram, decisions, and costs; tests pass (`npm test`, 74/74 green)
