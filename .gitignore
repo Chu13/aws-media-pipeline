@@ -1,0 +1,14 @@
+node_modules/
+dist/
+cdk.out/
+coverage/
+*.log
+.env
+.env.local
+.DS_Store
+
+# Cross-compiled sharp binary output — rebuilt by layers/sharp/build.sh,
+# never committed (platform-specific, ~30MB+).
+layers/sharp/nodejs/
+
+web/dist/
