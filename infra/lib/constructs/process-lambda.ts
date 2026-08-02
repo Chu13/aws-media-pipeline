@@ -29,8 +29,18 @@ export function createProcessLambda(scope: Construct, props: ProcessLambdaProps)
     entry: path.join(__dirname, "../../../lambdas/process/src/handler.ts"),
     runtime: lambda.Runtime.NODEJS_22_X, // not 24.x — CDK/SAM bundling image support lags new major runtimes
     architecture: lambda.Architecture.ARM_64,
-    memorySize: 2048, // >1,769MB buys a full vCPU; AVIF encoding is the expensive step
-    timeout: cdk.Duration.seconds(30),
+    // 3008MB is this account's Lambda memory ceiling (some accounts/regions
+    // still cap at 3008 rather than the newer 10240 max — confirmed by a
+    // failed deploy attempt at 4096). ~1.7 vCPU vs. 2048MB's ~1.15 (Lambda
+    // allocates CPU proportional to memory, ~1,769MB per vCPU). Measured
+    // against a real 3000x2000 photo at 2048MB: 6 variants encode fully
+    // concurrently (see variants.ts), so 6 CPU-bound operations were
+    // contending for barely more than 1 core and took ~24s. More memory is
+    // the direct lever here, not less concurrency — it's cost-neutral for
+    // CPU-bound work (higher rate, lower duration, similar total
+    // GB-seconds) and "processes in seconds" is the whole point of the demo.
+    memorySize: 3008,
+    timeout: cdk.Duration.seconds(60),
     depsLockFilePath: path.join(__dirname, "../../../package-lock.json"),
     bundling: {
       forceDockerBundling: true,

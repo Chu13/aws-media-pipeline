@@ -45,11 +45,13 @@ export function variantKey(jobId: string, width: VariantWidth, format: VariantFo
  * output key still uses the requested size bucket regardless, so the
  * manifest's URL scheme stays fixed no matter the source's real dimensions.
  *
- * Resizes once per width, then encodes both formats from that single
- * resized buffer concurrently. Decoding + resizing is the expensive part;
- * doing it once per width (not once per width-format pair) roughly halves
- * the work, and bounds peak memory to one resized raster + two in-flight
- * encodes at a time rather than firing all 6 encodes at once.
+ * Resizes once per width (not once per width-format pair, which would
+ * decode+resize twice for no reason), then encodes both formats from that
+ * one resized buffer. All 3 widths and both formats run fully concurrently
+ * — 6 operations in flight at once. That's deliberately paired with a
+ * Lambda memory size high enough to give this real CPU headroom (see
+ * infra/lib/constructs/process-lambda.ts) rather than throttling
+ * concurrency down to fit a smaller allocation.
  */
 export async function generateVariants(input: Buffer, jobId: string): Promise<GeneratedVariant[]> {
   const source = sharp(input, { failOn: "none" });

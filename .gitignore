@@ -7,8 +7,7 @@ coverage/
 .env.local
 .DS_Store
 
-# Cross-compiled sharp binary output — rebuilt by layers/sharp/build.sh,
-# never committed (platform-specific, ~30MB+).
-layers/sharp/nodejs/
+# Account-specific deploy artifact (bucket names, distribution domain).
+infra/cdk-outputs.json
 
 web/dist/

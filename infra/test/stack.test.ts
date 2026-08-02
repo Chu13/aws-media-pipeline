@@ -90,6 +90,14 @@ describe("MediaPipelineStack", () => {
     });
   });
 
+  it("serves index.html for the site bucket's root path", () => {
+    // Without this, a request for "/" asks S3 for the empty-string object
+    // key, which doesn't exist — caught by an actual deploy, not synth.
+    template.hasResourceProperties("AWS::CloudFront::Distribution", {
+      DistributionConfig: Match.objectLike({ DefaultRootObject: "index.html" }),
+    });
+  });
+
   it("grants CloudFront both invocation permissions the presign Function URL needs", () => {
     const permissions = Object.values(template.findResources("AWS::Lambda::Permission")).map(
       (resource) => (resource as { Properties: { Action: string; Principal: string } }).Properties,

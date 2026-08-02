@@ -67,6 +67,10 @@ export function createDistribution(scope: Construct, props: DistributionProps): 
   const distribution = new cloudfront.Distribution(scope, "Distribution", {
     priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
     httpVersion: cloudfront.HttpVersion.HTTP2_AND_3,
+    // Without this, a request for "/" asks the S3 origin for the
+    // empty-string object key, which doesn't exist — OAC's restrictive
+    // bucket policy then denies it as a 403 rather than a clean 404.
+    defaultRootObject: "index.html",
     defaultBehavior: {
       origin: origins.S3BucketOrigin.withOriginAccessControl(props.siteBucket),
       viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
